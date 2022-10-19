@@ -20,6 +20,7 @@
  */
 
 #include "CiderPlanPatterns.h"
+#include <iostream>
 
 namespace facebook::velox::plugin::plantransformer {
 using namespace facebook::velox::core;
@@ -197,4 +198,36 @@ bool FilterStateMachine::accept(VeloxPlanNodeAddr nodeAddr) {
     return false;
   }
 }
+
+StatePtr PartialAggStateMachine::Initial::accept(VeloxPlanNodeAddr nodeAddr) {
+  VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
+  auto aggNode = std::dynamic_pointer_cast<const AggregationNode>(nodePtr);
+
+  if (aggNode->step() == AggregationNode::Step::kPartial) {
+    return std::make_shared<PartialAggStateMachine::PartialAgg>();
+  } else {
+    return std::make_shared<PartialAggStateMachine::NotAccept>();
+  }
+}
+
+bool PartialAggStateMachine::accept(VeloxPlanNodeAddr nodeAddr) {
+  StatePtr curState = getCurState();
+  std::cout << "----------------" << curState->isFinal() << std::endl ;
+  // if (curState != nullptr) {
+  //   curState = curState->accept(nodeAddr);
+  //   setCurState(curState);
+
+  //   // if (auto notAcceptState = std::dynamic_pointer_cast<NotAccept>(curState)) {
+  //   //   return false;
+  //   // } else {
+  //   //   addToMatchResult(nodeAddr);
+  //   //   return true;
+  //   // }
+  // }
+  //  else {
+  //   return false;
+  // }
+  return false;
+}
+
 }  // namespace facebook::velox::plugin::plantransformer

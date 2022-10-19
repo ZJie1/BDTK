@@ -497,6 +497,33 @@ TEST_F(CiderOperatorTest, partial_avg_notAllNull) {
   assertQuery(resultPtr, duckdbSql);
 }
 
+TEST_F(CiderOperatorTest, partialAggPattern) {
+  auto data = makeRowVector({makeFlatVector<int64_t>(10, [](auto row) { return row; })});
+  createDuckDbTable({data});
+  auto veloxPlan = PlanBuilder()
+                       .values({data})
+                       .partialAggregation({}, {"avg(c0) as avg_ccccc"}, {})
+                       .planNode();
+
+  auto resultPtr = CiderVeloxPluginCtx::transformVeloxPlan(veloxPlan);
+  std::cout << resultPtr->toString(true, true);
+  auto duckdbSql = "SELECT row(45, 10)";
+
+  assertQuery(veloxPlan, duckdbSql);
+  assertQuery(resultPtr, duckdbSql);
+
+  const ::substrait::Plan substraitPlan = ::substrait::Plan();
+  auto expectedPlan =
+      PlanBuilder()
+          .values({data})
+          .addNode([&](std::string id, std::shared_ptr<const core::PlanNode> input) {
+            return std::make_shared<facebook::velox::plugin::CiderPlanNode>(
+                CiderPlanNode(id, {input}, input->outputType(), substraitPlan));
+          })
+          .planNode();
+  EXPECT_TRUE(PlanTansformerTestUtil::comparePlanSequence(resultPtr, expectedPlan));
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   folly::init(&argc, &argv, false);
