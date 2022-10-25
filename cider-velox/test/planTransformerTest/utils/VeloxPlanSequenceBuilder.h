@@ -19,31 +19,28 @@
  * under the License.
  */
 
-#include <folly/init/Init.h>
-#include "PlanTranformerIncludes.h"
-#include "utils/InvalidPlanPatterns.h"
+#pragma once
+
+#include "planTransformer/PlanNodeAddr.h"
+#include "velox/exec/tests/utils/PlanBuilder.h"
+
+using namespace facebook::velox::exec::test;
 
 namespace facebook::velox::plugin::plantransformer::test {
-using namespace facebook::velox::core;
-class InvalidPlanPatternTest : public PlanTransformerTestBase {
+
+class VeloxPlanSequenceBuilder {
  public:
-  InvalidPlanPatternTest() {
-    auto transformerFactory = PlanTransformerFactory().registerPattern(
-        std::make_shared<InvalidPlanPattern>(), std::make_shared<KeepOrginalRewriter>());
-    setTransformerFactory(transformerFactory);
-  }
+  // VeloxPlanSequenceBuilder(): planBuilder_{PlanBuilder()}{};
+  VeloxPlanSequenceBuilder& filter();
+  VeloxPlanSequenceBuilder& proj();
+  VeloxPlanSequenceBuilder& partialAgg();
+
+  const VeloxPlanNodePtr& planNode();
+  std::string nextPlanNodeId();
+
+ private:
+  PlanBuilder planBuilder_;
+  core::PlanNodePtr planNode_;
+  int planNodeId_ = 0;
 };
-
-TEST_F(InvalidPlanPatternTest, invalidPattern) {
-  VeloxPlanBuilder transformPlanBuilder;
-  VeloxPlanNodePtr planPtr = transformPlanBuilder.filter().proj().partialAgg().planNode();
-  EXPECT_THROW(getTransformer(planPtr)->transform(), std::runtime_error);
-}
-
 }  // namespace facebook::velox::plugin::plantransformer::test
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  folly::init(&argc, &argv, false);
-  return RUN_ALL_TESTS();
-}

@@ -176,3 +176,4 @@ target_link_libraries(CiderOperatorAggOpTest ${VELOX_PLUGIN_TEST_LIBS})
 add_test(CiderOperatorAggOpTest CiderOperatorAggOpTest ${TEST_ARGS})
 
 add_subdirectory(expression)
+add_subdirectory(planTransformerTest)
