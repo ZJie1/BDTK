@@ -90,8 +90,6 @@ TEST_F(FilterProjectSwapTest, noNeedToSwap) {
 //   EXPECT_TRUE(compareWithExpected(resultPtr, expectedLeftPtr));
 // }
 
-
-
 }  // namespace facebook::velox::plugin::plantransformer::test
 
 int main(int argc, char** argv) {
