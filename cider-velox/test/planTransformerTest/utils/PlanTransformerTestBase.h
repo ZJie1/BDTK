@@ -23,12 +23,12 @@
 
 #include <gtest/gtest.h>
 
+#include "../../CiderOperatorTestBase.h"
 #include "planTransformer/PlanNodeAddr.h"
 #include "planTransformer/PlanTransformer.h"
-#include "../../CiderOperatorTestBase.h"
 
 namespace facebook::velox::plugin::plantransformer::test {
-class PlanTransformerTestBase : public CiderOperatorTestBase{
+class PlanTransformerTestBase : public CiderOperatorTestBase {
  public:
   bool compareWithExpected(VeloxPlanNodePtr result, VeloxPlanNodePtr expected);
   std::shared_ptr<PlanTransformer> getTransformer(VeloxPlanNodePtr root);

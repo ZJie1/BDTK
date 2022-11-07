@@ -23,22 +23,22 @@
 
 namespace facebook::velox::plugin::plantransformer::test {
 
-//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::values(
+// VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::values(
 //    const std::vector<RowVectorPtr>& batches) {
 //  planBuilder_.values(batches);
 //  return *this;
 //}
 //
-//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::filter() {
+// VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::filter() {
 //  planBuilder_.filter("c0 > 1");
 //  return *this;
 //}
 //
-//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::proj() {
+// VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::proj() {
 //  planBuilder_.project({});
 //  return *this;
 //}
-//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::partialAgg() {
+// VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::partialAgg() {
 //  planBuilder_.partialAggregation({}, {}, {});
 //  return *this;
 //}

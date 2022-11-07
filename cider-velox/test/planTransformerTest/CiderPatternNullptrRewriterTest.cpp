@@ -50,7 +50,8 @@ TEST_F(CiderPatternNullptrRewriterTest, filterProjectAgg) {
                                  .partialAggregation({}, {"SUM(c1)"})
                                  .planNode();
   VeloxPlanNodePtr resultPtr = getTransformer(planPtr)->transform();
-  EXPECT_TRUE(compareWithExpected(resultPtr, planPtr->sources()[0]->sources()[0]->sources()[0]));
+  EXPECT_TRUE(
+      compareWithExpected(resultPtr, planPtr->sources()[0]->sources()[0]->sources()[0]));
 }
 
 TEST_F(CiderPatternNullptrRewriterTest, SingleJoinMultiCompoundNodes) {
