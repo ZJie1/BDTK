@@ -19,12 +19,9 @@
 
 add_subdirectory(utils)
 
-add_library(velox_plugin_test_util1
-            ${CMAKE_CURRENT_SOURCE_DIR}/../CiderPlanBuilder.cpp)
-
 set(VELOX_PLAN_TRANSFORMER_TEST_LIBS
     cider_plan_transformer velox_plan_transformer_test_utils velox_core
-    velox_plugin_test_util1 ${VELOX_PLUGIN_TEST_LIBS})
+     ${VELOX_PLUGIN_TEST_LIBS})
 
 set(TEST_ARGS "")
 

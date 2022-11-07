@@ -26,8 +26,10 @@
 #include "../../CiderOperatorTestBase.h"
 #include "planTransformer/PlanNodeAddr.h"
 #include "planTransformer/PlanTransformer.h"
+#include "velox/exec/tests/utils/PlanBuilder.h"
 
 namespace facebook::velox::plugin::plantransformer::test {
+
 class PlanTransformerTestBase : public CiderOperatorTestBase {
  public:
   bool compareWithExpected(VeloxPlanNodePtr result, VeloxPlanNodePtr expected);
@@ -37,7 +39,16 @@ class PlanTransformerTestBase : public CiderOperatorTestBase {
   }
   std::unique_ptr<memory::MemoryPool> pool_{memory::getDefaultScopedMemoryPool()};
 
+  VeloxPlanNodePtr getCiderExpectedPtr(RowTypePtr rowType,
+                                       VeloxPlanNodeVec joinSrcVec = {});
+
+  VeloxPlanNodePtr getSingleFilterNode(RowTypePtr rowType, const std::string filter);
+
+  VeloxPlanNodePtr getSingleProjectNode(RowTypePtr rowType,
+                                        const std::vector<std::string> projections);
+
  private:
   PlanTransformerFactory transformerFactory_;
+  RowTypePtr rowType_;
 };
 }  // namespace facebook::velox::plugin::plantransformer::test

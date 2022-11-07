@@ -22,7 +22,6 @@ add_library(
   FilterProjectSwapTransformer.cpp
   PlanTansformerTestUtil.cpp
   PlanTransformerTestBase.cpp
-  # VeloxPlanSequenceBuilder.cpp
   InvalidPlanPatterns.h
   TestPlanRewriters.h
   VeloxTypes.h

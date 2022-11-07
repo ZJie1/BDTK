@@ -39,10 +39,13 @@ class CiderPatternKeepOrginalRewriterTest : public PlanTransformerTestBase {
  protected:
   RowTypePtr rowType_{ROW({"c0", "c1"}, {BIGINT(), INTEGER()})};
   RowTypePtr rowTypeLeft_{ROW({"c2", "c3"}, {BIGINT(), INTEGER()})};
+  VeloxPlanNodePtr planRight1Ptr_ =
+      getSingleProjectNode(rowType_, {"c0 as u_c0", "c1 as u_c1"});
+
+  VeloxPlanNodePtr planRight2Ptr_ = getSingleFilterNode(rowType_, "c0 > 1");
 };
 
 TEST_F(CiderPatternKeepOrginalRewriterTest, filterProjectAgg) {
-  VeloxPlanBuilder transformPlanBuilder;
   VeloxPlanNodePtr planPtr = PlanBuilder()
                                  .values(generateTestBatch(rowType_, false))
                                  .filter("c0 > 2 ")
@@ -76,21 +79,13 @@ TEST_F(CiderPatternKeepOrginalRewriterTest, SingleJoinMultiCompoundNodes) {
 }
 
 TEST_F(CiderPatternKeepOrginalRewriterTest, MultiJoinNodes) {
-  VeloxPlanNodePtr planRight1Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .project({"c0 as u_c0", "c1 as u_c1"})
-                                       .planNode();
 
-  VeloxPlanNodePtr planRight2Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .filter("c0 > 1")
-                                       .planNode();
   VeloxPlanNodePtr planLeftPtr =
       PlanBuilder()
           .values(generateTestBatch(rowTypeLeft_, false))
           .filter("c2 > 3")
-          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr, "", {"c2", "c3", "u_c1"})
-          .hashJoin({"c2"}, {"c0"}, planRight2Ptr, "", {"c2", "c3", "c1"})
+          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr_, "", {"c2", "c3", "u_c1"})
+          .hashJoin({"c2"}, {"c0"}, planRight2Ptr_, "", {"c2", "c3", "c1"})
           .filter("c1 > 2")
           .project({"c2", "c3", "c1"})
           .partialAggregation({}, {"SUM(c2)"})
@@ -101,24 +96,14 @@ TEST_F(CiderPatternKeepOrginalRewriterTest, MultiJoinNodes) {
 }
 
 TEST_F(CiderPatternKeepOrginalRewriterTest, MultiSeperatedJoinNodes) {
-  VeloxPlanNodePtr planRight1Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .project({"c0 as u_c0", "c1 as u_c1"})
-                                       .planNode();
-
-  VeloxPlanNodePtr planRight2Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .filter("c0 > 1")
-                                       .planNode();
-
   VeloxPlanNodePtr planLeftPtr =
       PlanBuilder()
           .values(generateTestBatch(rowTypeLeft_, false))
           .filter("c2 > 3")
-          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr, "", {"c2", "c3", "u_c1"})
+          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr_, "", {"c2", "c3", "u_c1"})
           .filter("u_c1 > 4")
           .project({"c2", "c3", "u_c1"})
-          .hashJoin({"c2"}, {"c0"}, planRight2Ptr, "", {"c2", "c3", "c1"})
+          .hashJoin({"c2"}, {"c0"}, planRight2Ptr_, "", {"c2", "c3", "c1"})
           .filter("c1 > 2")
           .project({"c2", "c3", "c1"})
           .partialAggregation({}, {"SUM(c2)"})
@@ -129,24 +114,16 @@ TEST_F(CiderPatternKeepOrginalRewriterTest, MultiSeperatedJoinNodes) {
 }
 
 TEST_F(CiderPatternKeepOrginalRewriterTest, EndWithSingleJoinNode) {
-  VeloxPlanNodePtr planRight1Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .project({"c0 as u_c0", "c1 as u_c1"})
-                                       .planNode();
 
-  VeloxPlanNodePtr planRight2Ptr = PlanBuilder()
-                                       .values(generateTestBatch(rowType_, false))
-                                       .filter("c0 > 1")
-                                       .planNode();
-  VeloxPlanBuilder planLeftBranchBuilder;
+
   VeloxPlanNodePtr planLeftPtr =
       PlanBuilder()
           .values(generateTestBatch(rowTypeLeft_, false))
           .filter("c2 > 3")
-          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr, "", {"c2", "c3", "u_c1"})
+          .hashJoin({"c2"}, {"u_c0"}, planRight1Ptr_, "", {"c2", "c3", "u_c1"})
           .filter("u_c1 > 4")
           .project({"c2", "c3", "u_c1"})
-          .hashJoin({"c2"}, {"c0"}, planRight2Ptr, "", {"c2", "c3", "c1"})
+          .hashJoin({"c2"}, {"c0"}, planRight2Ptr_, "", {"c2", "c3", "c1"})
           .planNode();
 
   VeloxPlanNodePtr resultPtr = getTransformer(planLeftPtr)->transform();

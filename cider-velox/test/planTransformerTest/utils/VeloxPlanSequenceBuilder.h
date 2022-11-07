@@ -21,28 +21,18 @@
 
 #pragma once
 
-#include "../../CiderPlanBuilder.h"
 #include "planTransformer/PlanNodeAddr.h"
+#include "../../CiderPlanBuilder.h"
 
 using namespace facebook::velox::exec::test;
 using namespace facebook::velox::plugin::test;
 
 namespace facebook::velox::plugin::plantransformer::test {
 
-class VeloxPlanSequenceBuilder {
+class VeloxPlanSequenceBuilder :public CiderPlanBuilder{
  public:
-  //  VeloxPlanSequenceBuilder() : planBuilder_{PlanBuilder()} {};
-  //  VeloxPlanSequenceBuilder& values(const std::vector<RowVectorPtr>& batches);
-  //  VeloxPlanSequenceBuilder& filter();
-  //  VeloxPlanSequenceBuilder& proj();
-  //  VeloxPlanSequenceBuilder& partialAgg();
 
-  const VeloxPlanNodePtr& planNodes();
-  // std::string nextPlanNodeId();
+  const VeloxPlanNodePtr& planNode() ;
 
- private:
-  PlanBuilder planBuilder_;
-  core::PlanNodePtr planNode_;
-  int planNodeId_ = 0;
 };
 }  // namespace facebook::velox::plugin::plantransformer::test
