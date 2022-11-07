@@ -22,21 +22,23 @@
 #pragma once
 
 #include "planTransformer/PlanNodeAddr.h"
-#include "velox/exec/tests/utils/PlanBuilder.h"
+#include "../../CiderPlanBuilder.h"
 
 using namespace facebook::velox::exec::test;
+using namespace facebook::velox::plugin::test;
 
 namespace facebook::velox::plugin::plantransformer::test {
 
 class VeloxPlanSequenceBuilder {
  public:
-  // VeloxPlanSequenceBuilder(): planBuilder_{PlanBuilder()}{};
-  VeloxPlanSequenceBuilder& filter();
-  VeloxPlanSequenceBuilder& proj();
-  VeloxPlanSequenceBuilder& partialAgg();
+//  VeloxPlanSequenceBuilder() : planBuilder_{PlanBuilder()} {};
+//  VeloxPlanSequenceBuilder& values(const std::vector<RowVectorPtr>& batches);
+//  VeloxPlanSequenceBuilder& filter();
+//  VeloxPlanSequenceBuilder& proj();
+//  VeloxPlanSequenceBuilder& partialAgg();
 
-  const VeloxPlanNodePtr& planNode();
-  std::string nextPlanNodeId();
+  const VeloxPlanNodePtr& planNodes() ;
+  // std::string nextPlanNodeId();
 
  private:
   PlanBuilder planBuilder_;

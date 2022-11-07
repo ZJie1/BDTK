@@ -23,44 +23,31 @@
 
 namespace facebook::velox::plugin::plantransformer::test {
 
-VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::filter() {
-  core::TypedExprPtr filter;
-  planNode_ = std::make_shared<core::FilterNode>(nextPlanNodeId(), filter, planNode_);
-  return *this;
+//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::values(
+//    const std::vector<RowVectorPtr>& batches) {
+//  planBuilder_.values(batches);
+//  return *this;
+//}
+//
+//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::filter() {
+//  planBuilder_.filter("c0 > 1");
+//  return *this;
+//}
+//
+//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::proj() {
+//  planBuilder_.project({});
+//  return *this;
+//}
+//VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::partialAgg() {
+//  planBuilder_.partialAggregation({}, {}, {});
+//  return *this;
+//}
+
+const VeloxPlanNodePtr& VeloxPlanSequenceBuilder::planNodes() {
+  return planBuilder_.planNode();
 }
 
-VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::proj() {
-  std::vector<std::string> names;
-  std::vector<core::TypedExprPtr> projections;
-  planNode_ = std::make_shared<core::ProjectNode>(
-      nextPlanNodeId(), names, projections, planNode_);
-  return *this;
-}
-VeloxPlanSequenceBuilder& VeloxPlanSequenceBuilder::partialAgg() {
-  const std::vector<core::FieldAccessTypedExprPtr> groupingKeys;
-  const std::vector<core::FieldAccessTypedExprPtr> preGroupedKeys;
-  const std::vector<std::string> aggregateNames;
-  const std::vector<core::CallTypedExprPtr> aggregates;
-  const std::vector<core::FieldAccessTypedExprPtr> aggregateMasks;
-  bool ignoreNullKeys;
-  planNode_ =
-      std::make_shared<core::AggregationNode>(nextPlanNodeId(),
-                                              core::AggregationNode::Step::kPartial,
-                                              groupingKeys,
-                                              preGroupedKeys,
-                                              aggregateNames,
-                                              aggregates,
-                                              aggregateMasks,
-                                              ignoreNullKeys,
-                                              planNode_);
-  return *this;
-}
-
-const VeloxPlanNodePtr& VeloxPlanSequenceBuilder::planNode() {
-  return planNode_;
-}
-
-std::string VeloxPlanSequenceBuilder::nextPlanNodeId() {
-  return fmt::format("{}", planNodeId_++);
-}
+// std::string VeloxPlanSequenceBuilder::nextPlanNodeId() {
+//   return fmt::format("{}", planNodeId_++);
+// }
 }  // namespace facebook::velox::plugin::plantransformer::test

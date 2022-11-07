@@ -25,15 +25,17 @@
 
 #include "planTransformer/PlanNodeAddr.h"
 #include "planTransformer/PlanTransformer.h"
+#include "../../CiderOperatorTestBase.h"
 
 namespace facebook::velox::plugin::plantransformer::test {
-class PlanTransformerTestBase : public testing::Test {
+class PlanTransformerTestBase : public CiderOperatorTestBase{
  public:
   bool compareWithExpected(VeloxPlanNodePtr result, VeloxPlanNodePtr expected);
   std::shared_ptr<PlanTransformer> getTransformer(VeloxPlanNodePtr root);
   void setTransformerFactory(PlanTransformerFactory& transformerFactory) {
     transformerFactory_ = transformerFactory;
   }
+  std::unique_ptr<memory::MemoryPool> pool_{memory::getDefaultScopedMemoryPool()};
 
  private:
   PlanTransformerFactory transformerFactory_;

@@ -42,6 +42,7 @@ class CiderPlanBuilder {
                                        const std::vector<std::string>& masks = {});
   CiderPlanBuilder& finalAggregation();
   const VeloxPlanNodePtr planNode();
+  const VeloxPlanNodePtr veloxPlanNode();
 
  private:
   PlanBuilder planBuilder_;

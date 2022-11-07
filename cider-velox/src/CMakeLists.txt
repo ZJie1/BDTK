@@ -37,8 +37,8 @@ add_library(velox_plugin ${VELOX_PLUGIN_SOURCES})
 
 target_precompile_headers(velox_plugin PUBLIC DataConvertor.h)
 
-target_link_libraries(velox_plugin velox_substrait_convertor
-                      velox_plan_transformer velox_exec ${GLOG})
+target_link_libraries(velox_plugin velox_substrait_convertor cider cider_plan_parser
+                      velox_plan_transformer velox_exec velox_arrow_bridge ${GLOG})
 
 # install headers
 set(VELOX_PLUGIN_HEADERS

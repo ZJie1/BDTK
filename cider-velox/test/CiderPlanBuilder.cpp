@@ -53,4 +53,8 @@ const VeloxPlanNodePtr CiderPlanBuilder::planNode() {
   return CiderVeloxPluginCtx::transformVeloxPlan(planBuilder_.planNode());
 }
 
+const VeloxPlanNodePtr CiderPlanBuilder::veloxPlanNode() {
+  return planBuilder_.planNode();
+}
+
 }  // namespace facebook::velox::plugin::test

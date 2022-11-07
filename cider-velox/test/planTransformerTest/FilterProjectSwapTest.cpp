@@ -20,8 +20,15 @@
  */
 
 #include <folly/init/Init.h>
+
+#include "../CiderOperatorTestBase.h"
+#include "../CiderPlanBuilder.h"
 #include "PlanTranformerIncludes.h"
 #include "utils/FilterProjectSwapTransformer.h"
+#include "velox/dwio/common/tests/utils/BatchMaker.h"
+#include "velox/exec/tests/utils/QueryAssertions.h"
+
+using facebook::velox::test::BatchMaker;
 
 namespace facebook::velox::plugin::plantransformer::test {
 class FilterProjectSwapTest : public PlanTransformerTestBase {
@@ -32,25 +39,49 @@ class FilterProjectSwapTest : public PlanTransformerTestBase {
         std::make_shared<ProjcetFilterSwapRewriter>());
     setTransformerFactory(transformerFactory);
   }
+
+ protected:
+  std::vector<std::string> projections_ = {"c0", "c1", "c0 + 2"};
+  std::string filter_ = "c0 > 2 ";
+  std::vector<std::string> aggs_ = {"SUM(c1)"};
+  RowTypePtr rowType_{ROW({"c0", "c1"}, {BIGINT(), INTEGER()})};
 };
 
 TEST_F(FilterProjectSwapTest, noNeedToSwap) {
-  VeloxPlanBuilder transformPlanBuilder;
-  VeloxPlanNodePtr planPtr = transformPlanBuilder.filter().proj().partialAgg().planNode();
+  VeloxPlanNodePtr planPtr = PlanBuilder()
+                                 .values(generateTestBatch(rowType_, false))
+                                 .filter(filter_)
+                                 .project(projections_)
+                                 .partialAggregation({}, aggs_)
+                                 .planNode();
+  std::cout << planPtr->toString(true, true);
+
   VeloxPlanNodePtr resultPtr = getTransformer(planPtr)->transform();
   EXPECT_TRUE(compareWithExpected(resultPtr, planPtr));
 }
 
-// TEST_F(FilterProjectSwapTest, singelBranchSwap) {
-//   VeloxPlanBuilder transformPlanBuilder;
-//   VeloxPlanNodePtr planPtr =
-//       transformPlanBuilder.proj().filter().proj().filter().partialAgg().planNode();
-//   VeloxPlanBuilder expectedPlanBuilder;
-//   VeloxPlanNodePtr expectedPtr =
-//       expectedPlanBuilder.filter().proj().filter().proj().partialAgg().planNode();
-//   VeloxPlanNodePtr resultPtr = getTransformer(planPtr)->transform();
-//   EXPECT_TRUE(compareWithExpected(resultPtr, expectedPtr));
-// }
+TEST_F(FilterProjectSwapTest, singelBranchSwap) {
+  VeloxPlanBuilder transformPlanBuilder;
+  VeloxPlanNodePtr planPtr = PlanBuilder()
+                                 .values(generateTestBatch(rowType_, false))
+                                 .project(projections_)
+                                 .filter(filter_)
+                                 .project(projections_)
+                                 .filter(filter_)
+                                 .partialAggregation({}, aggs_)
+                                 .planNode();
+  VeloxPlanBuilder expectedPlanBuilder;
+  VeloxPlanNodePtr expectedPtr = PlanBuilder()
+                                     .values(generateTestBatch(rowType_, false))
+                                     .filter(filter_)
+                                     .project(projections_)
+                                     .filter(filter_)
+                                     .project(projections_)
+                                     .partialAggregation({}, aggs_)
+                                     .planNode();
+  VeloxPlanNodePtr resultPtr = getTransformer(planPtr)->transform();
+  EXPECT_TRUE(compareWithExpected(resultPtr, expectedPtr));
+}
 
 // TEST_F(FilterProjectSwapTest, singelBranchSwap2) {
 //   VeloxPlanBuilder transformPlanBuilder;
