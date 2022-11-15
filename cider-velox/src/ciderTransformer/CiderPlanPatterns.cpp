@@ -48,6 +48,8 @@ StatePtr CompoundStateMachine::Project::accept(const VeloxPlanNodeAddr& nodeAddr
   VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
   if (auto aggNode = std::dynamic_pointer_cast<const AggregationNode>(nodePtr)) {
     return std::make_shared<CompoundStateMachine::Aggregate>();
+  } else if (auto topNNode = std::dynamic_pointer_cast<const TopNNode>(nodePtr)) {
+    return std::make_shared<CompoundStateMachine::TopN>();
   } else {
     return std::make_shared<CompoundStateMachine::AcceptPrev>();
   }
@@ -118,6 +120,13 @@ bool LeftDeepJoinStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
     } else if (auto endWithLeftJoin =
                    std::dynamic_pointer_cast<EndWithLeftJoin>(curState)) {
       return true;
+    } else if (auto notAcceptState =
+                   std::dynamic_pointer_cast<FilterStateMachine::NotAccept>(curState)) {
+      return true;
+    } else if (auto notAcceptState =
+                   std::dynamic_pointer_cast<PartialAggStateMachine::NotAccept>(
+                       curState)) {
+      return true;
     } else {
       addToMatchResult(nodeAddr);
       return true;
@@ -133,9 +142,28 @@ VeloxPlanNodeAddrList LeftDeepJoinStateMachine::matchResult() {
             std::dynamic_pointer_cast<CompoundStateMachine::NotAccept>(getCurState())) {
       compoundMatchResult_ = {};
     }
+
+    if (auto aggNotAcceptState =
+            std::dynamic_pointer_cast<PartialAggStateMachine::NotAccept>(getCurState())) {
+      partialAggMatchResult_ = {};
+    }
+
+    if (auto filterNotAcceptState =
+            std::dynamic_pointer_cast<FilterStateMachine::NotAccept>(getCurState())) {
+      filterMatchResult_ = {};
+    }
+
     VeloxPlanNodeAddrList joinMatchResult = StateMachine::matchResult();
     joinMatchResult.insert(
         joinMatchResult.end(), compoundMatchResult_.begin(), compoundMatchResult_.end());
+
+    joinMatchResult.insert(joinMatchResult.end(),
+                           partialAggMatchResult_.begin(),
+                           partialAggMatchResult_.end());
+
+    joinMatchResult.insert(
+        joinMatchResult.end(), filterMatchResult_.begin(), filterMatchResult_.end());
+
     return joinMatchResult;
   } else {
     return VeloxPlanNodeAddrList{};
@@ -145,6 +173,10 @@ VeloxPlanNodeAddrList LeftDeepJoinStateMachine::matchResult() {
 void LeftDeepJoinStateMachine::addToMatchResult(const VeloxPlanNodeAddr& nodeAddr) {
   if (inCompoundState()) {
     compoundMatchResult_.emplace_back(nodeAddr);
+  } else if (inPartialAggState()) {
+    partialAggMatchResult_.emplace_back(nodeAddr);
+  } else if (inFilterState()) {
+    filterMatchResult_.emplace_back(nodeAddr);
   } else {
     StateMachine::addToMatchResult(nodeAddr);
   }
@@ -152,6 +184,8 @@ void LeftDeepJoinStateMachine::addToMatchResult(const VeloxPlanNodeAddr& nodeAdd
 
 void LeftDeepJoinStateMachine::clearMatchResult() {
   compoundMatchResult_ = {};
+  partialAggMatchResult_ = {};
+  filterMatchResult_ = {};
   StateMachine::clearMatchResult();
 }
 
@@ -163,13 +197,36 @@ bool LeftDeepJoinStateMachine::inCompoundState() {
   return false;
 }
 
+bool LeftDeepJoinStateMachine::inFilterState() {
+  if (auto filterState =
+          std::dynamic_pointer_cast<FilterStateMachine::Filter>(getCurState())) {
+    return true;
+  }
+  return false;
+}
+
+bool LeftDeepJoinStateMachine::inPartialAggState() {
+  if (auto partialAggState =
+          std::dynamic_pointer_cast<PartialAggStateMachine::PartialAgg>(getCurState())) {
+    return true;
+  }
+  return false;
+}
+
 StatePtr LeftDeepJoinStateMachine::OneJoin::accept(const VeloxPlanNodeAddr& nodeAddr) {
   // encounter the sequence end
   if (StateMachine::endOfSequence().equal(nodeAddr)) {
     return std::make_shared<EndWithLeftJoin>();
+  } else if (auto aggNode =
+                 std::dynamic_pointer_cast<const AggregationNode>(nodeAddr.nodePtr)) {
+    return std::make_shared<PartialAggStateMachine::Initial>()->accept(nodeAddr);
+
+  } else if (auto filterNode =
+                 std::dynamic_pointer_cast<const FilterNode>(nodeAddr.nodePtr)) {
+    return std::make_shared<FilterStateMachine::Initial>()->accept(nodeAddr);
+
   } else {
-    StatePtr init = std::make_shared<CompoundStateMachine::Initial>();
-    return init->accept(nodeAddr);
+    return std::make_shared<CompoundStateMachine::Initial>()->accept(nodeAddr);
   }
 }
 
@@ -211,6 +268,64 @@ StatePtr PartialAggStateMachine::Initial::accept(const VeloxPlanNodeAddr& nodeAd
 }
 
 bool PartialAggStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
+  StatePtr curState = getCurState();
+  if (curState != nullptr) {
+    curState = curState->accept(nodeAddr);
+    setCurState(curState);
+
+    if (auto notAcceptState = std::dynamic_pointer_cast<NotAccept>(curState)) {
+      return false;
+    } else {
+      addToMatchResult(nodeAddr);
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+
+StatePtr OrderByStateMachine::Initial::accept(const VeloxPlanNodeAddr& nodeAddr) {
+  VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
+
+  if (auto orderBy = std::dynamic_pointer_cast<const OrderByNode>(nodePtr)) {
+    if (orderBy->isPartial()) {
+      return std::make_shared<OrderByStateMachine::OrderBy>();
+    }
+  }
+
+  return std::make_shared<OrderByStateMachine::NotAccept>();
+}
+
+bool OrderByStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
+  StatePtr curState = getCurState();
+  if (curState != nullptr) {
+    curState = curState->accept(nodeAddr);
+    setCurState(curState);
+
+    if (auto notAcceptState = std::dynamic_pointer_cast<NotAccept>(curState)) {
+      return false;
+    } else {
+      addToMatchResult(nodeAddr);
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+
+StatePtr TopNStateMachine::Initial::accept(const VeloxPlanNodeAddr& nodeAddr) {
+  VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
+
+  if (auto topN = std::dynamic_pointer_cast<const TopNNode>(nodePtr)) {
+    if (topN->isPartial()) {
+      return std::make_shared<TopNStateMachine::TopN>();
+    }
+  }
+
+  return std::make_shared<TopNStateMachine::NotAccept>();
+}
+
+bool TopNStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
   StatePtr curState = getCurState();
   if (curState != nullptr) {
     curState = curState->accept(nodeAddr);
