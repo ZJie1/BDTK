@@ -20,6 +20,18 @@
  */
 
 #include "CiderPlanPatterns.h"
+namespace {
+
+using VeloxPlanNodePtr = std::shared_ptr<const facebook::velox::core::PlanNode>;
+template <typename T>
+bool isPartialNode(VeloxPlanNodePtr nodePtr) {
+  if (auto node = std::dynamic_pointer_cast<const T>(nodePtr)) {
+    return node->isPartial() ? true : false;
+  } else {
+    return false;
+  }
+}
+}  // namespace
 
 namespace facebook::velox::plugin::plantransformer {
 using namespace facebook::velox::core;
@@ -48,7 +60,7 @@ StatePtr CompoundStateMachine::Project::accept(const VeloxPlanNodeAddr& nodeAddr
   VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
   if (auto aggNode = std::dynamic_pointer_cast<const AggregationNode>(nodePtr)) {
     return std::make_shared<CompoundStateMachine::Aggregate>();
-  } else if (auto topNNode = std::dynamic_pointer_cast<const TopNNode>(nodePtr)) {
+  } else if (isPartialNode<TopNNode>(nodePtr)) {
     return std::make_shared<CompoundStateMachine::TopN>();
   } else {
     return std::make_shared<CompoundStateMachine::AcceptPrev>();
@@ -287,12 +299,9 @@ bool PartialAggStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
 StatePtr OrderByStateMachine::Initial::accept(const VeloxPlanNodeAddr& nodeAddr) {
   VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
 
-  if (auto orderBy = std::dynamic_pointer_cast<const OrderByNode>(nodePtr)) {
-    if (orderBy->isPartial()) {
-      return std::make_shared<OrderByStateMachine::OrderBy>();
-    }
+  if (isPartialNode<OrderByNode>(nodePtr)) {
+    return std::make_shared<OrderByStateMachine::OrderBy>();
   }
-
   return std::make_shared<OrderByStateMachine::NotAccept>();
 }
 
@@ -316,10 +325,8 @@ bool OrderByStateMachine::accept(const VeloxPlanNodeAddr& nodeAddr) {
 StatePtr TopNStateMachine::Initial::accept(const VeloxPlanNodeAddr& nodeAddr) {
   VeloxPlanNodePtr nodePtr = nodeAddr.nodePtr;
 
-  if (auto topN = std::dynamic_pointer_cast<const TopNNode>(nodePtr)) {
-    if (topN->isPartial()) {
-      return std::make_shared<TopNStateMachine::TopN>();
-    }
+  if (isPartialNode<TopNNode>(nodePtr)) {
+    return std::make_shared<TopNStateMachine::TopN>();
   }
 
   return std::make_shared<TopNStateMachine::NotAccept>();
