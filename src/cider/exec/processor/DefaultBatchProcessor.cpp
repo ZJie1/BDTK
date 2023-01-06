@@ -38,6 +38,9 @@ DefaultBatchProcessor::DefaultBatchProcessor(const plan::SubstraitPlanPtr& plan,
     // initialize joinHandler accordingly once the
     joinHandler_ = std::make_shared<HashProbeHandler>(shared_from_this());
     this->state_ = BatchProcessorState::kWaiting;
+  } else if (plan_->hasCrossRel()) {
+    joinHandler_ = std::make_shared<CrossProbeHandler>(shared_from_this());
+    this->state_ = BatchProcessorState::kWaiting;
   }
 
   auto translator =

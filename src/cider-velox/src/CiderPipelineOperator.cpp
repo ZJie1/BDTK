@@ -93,6 +93,7 @@ CiderPipelineOperator::CiderPipelineOperator(
                "CiderOp")
     , ciderPlanNode_(ciderPlanNode)
     , allocator_(std::make_shared<PoolAllocator>(operatorCtx_->pool())) {
+  //TODO: according the ciderPlanNode to decide which bridge should use, hashJoin or CrossJoin
   auto context =
       std::make_shared<cider::exec::processor::BatchProcessorContext>(allocator_);
   cider::exec::processor::HashBuildTableSupplier buildTableSupplier = [&]() {

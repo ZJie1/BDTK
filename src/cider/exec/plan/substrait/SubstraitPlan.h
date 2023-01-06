@@ -36,6 +36,8 @@ class SubstraitPlan {
 
   bool hasJoinRel() const;
 
+  bool hasCrossRel() const;
+
   const substrait::Plan& getPlan() const { return plan_; }
 
   const std::optional<std::shared_ptr<::substrait::JoinRel>> getJoinRel();

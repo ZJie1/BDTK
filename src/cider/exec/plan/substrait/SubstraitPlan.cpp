@@ -47,6 +47,17 @@ bool SubstraitPlan::hasJoinRel() const {
   return false;
 }
 
+bool SubstraitPlan::hasCrossRel() const {
+  for (auto& rel : plan_.relations()) {
+    if (rel.has_root() && rel.root().has_input()) {
+      if (rel.root().input().has_cross()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 const std::optional<std::shared_ptr<::substrait::JoinRel>> SubstraitPlan::getJoinRel() {
   if (hasJoinRel()) {
     return std::make_shared<::substrait::JoinRel>(
