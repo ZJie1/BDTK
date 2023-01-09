@@ -50,9 +50,7 @@ bool SubstraitPlan::hasJoinRel() const {
 bool SubstraitPlan::hasCrossRel() const {
   for (auto& rel : plan_.relations()) {
     if (rel.has_root() && rel.root().has_input()) {
-      if (rel.root().input().has_cross()) {
-        return true;
-      }
+     return  rel.root().input().has_cross();
     }
   }
   return false;

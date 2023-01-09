@@ -26,6 +26,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include "../../../../../thirdparty/velox/velox/vector/arrow/Abi.h"
 #include "cider/CiderAllocator.h"
 
 namespace cider::exec::processor {
@@ -43,7 +44,16 @@ struct HashBuildResult {
   std::shared_ptr<JoinHashTable> table;
 };
 
+struct CrossJoinBuildData {
+  explicit CrossJoinBuildData(ArrowArray* _data, ArrowSchema* _schema)
+      : data(std::move(_data)), schema(std::move(_schema)) {}
+
+  ArrowArray* data;
+  ArrowSchema* schema;
+};
+
 using HashBuildTableSupplier = std::function<std::optional<HashBuildResult>()>;
+using CrossJoinColumnBatchSupplier = std::function<std::optional<CrossJoinBuildData>()>;
 
 class BatchProcessorContext {
  public:
@@ -60,9 +70,19 @@ class BatchProcessorContext {
     return buildTableSupplier_;
   }
 
+  void setCrossJoinColumnBatchSupplier(
+      const CrossJoinColumnBatchSupplier& columnBatchSupplier) {
+    columnBatchSupplier_ = columnBatchSupplier;
+  }
+
+  const CrossJoinColumnBatchSupplier& getCrossJoinColumnBatchSupplier() const {
+    return columnBatchSupplier_;
+  }
+
  private:
   std::shared_ptr<CiderAllocator> allocator_;
   HashBuildTableSupplier buildTableSupplier_;
+  CrossJoinColumnBatchSupplier columnBatchSupplier_;
 };
 
 using BatchProcessorContextPtr = std::shared_ptr<BatchProcessorContext>;

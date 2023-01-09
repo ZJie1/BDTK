@@ -21,7 +21,9 @@
 
 #include "CiderPipelineOperator.h"
 #include "Allocator.h"
+#include "CiderCrossJoinBuild.h"
 #include "CiderHashJoinBuild.h"
+#include "exec/plan/substrait/SubstraitPlan.h"
 #include "velox/exec/Task.h"
 #include "velox/vector/arrow/Abi.h"
 #include "velox/vector/arrow/Bridge.h"
@@ -93,19 +95,30 @@ CiderPipelineOperator::CiderPipelineOperator(
                "CiderOp")
     , ciderPlanNode_(ciderPlanNode)
     , allocator_(std::make_shared<PoolAllocator>(operatorCtx_->pool())) {
-  //TODO: according the ciderPlanNode to decide which bridge should use, hashJoin or CrossJoin
+  auto substraitPlan = ciderPlanNode->getSubstraitPlan();
+  auto planUtil = std::make_shared<cider::plan::SubstraitPlan>(substraitPlan);
   auto context =
       std::make_shared<cider::exec::processor::BatchProcessorContext>(allocator_);
-  cider::exec::processor::HashBuildTableSupplier buildTableSupplier = [&]() {
-    auto joinBridge = operatorCtx_->task()->getCustomJoinBridge(
-        operatorCtx_->driverCtx()->splitGroupId, planNodeId());
-    auto ciderJoinBridge = std::dynamic_pointer_cast<CiderHashJoinBridge>(joinBridge);
-    return ciderJoinBridge->hashBuildResultOrFuture(&future_);
-  };
-  context->setHashBuildTableSupplier(buildTableSupplier);
+  auto joinBridge = operatorCtx_->task()->getCustomJoinBridge(
+      operatorCtx_->driverCtx()->splitGroupId, planNodeId());
+  // if hashjoin
+  if (planUtil->hasJoinRel()) {
+    cider::exec::processor::HashBuildTableSupplier buildTableSupplier = [&]() {
+      auto ciderJoinBridge = std::dynamic_pointer_cast<CiderHashJoinBridge>(joinBridge);
+      return ciderJoinBridge->hashBuildResultOrFuture(&future_);
+    };
+    context->setHashBuildTableSupplier(buildTableSupplier);
+  }
+  // if cross join
+  else if (planUtil->hasCrossRel()) {
+    cider::exec::processor::CrossJoinColumnBatchSupplier columnBatchSupplier = [&]() {
+      auto ciderJoinBridge = std::dynamic_pointer_cast<CiderCrossJoinBridge>(joinBridge);
+      return ciderJoinBridge->hasDataOrFuture(&future_);
+    };
+    context->setCrossJoinColumnBatchSupplier(columnBatchSupplier);
+  }
 
-  batchProcessor_ = cider::exec::processor::makeBatchProcessor(
-      ciderPlanNode->getSubstraitPlan(), context);
+  batchProcessor_ = cider::exec::processor::makeBatchProcessor(substraitPlan, context);
 }
 
 }  // namespace facebook::velox::plugin

@@ -27,16 +27,23 @@
 #include "velox/exec/JoinBridge.h"
 #include "velox/exec/Operator.h"
 
+using CiderCrossBuildData = cider::exec::processor::CrossJoinBuildData;
+
 namespace facebook::velox::plugin {
 
 class CiderCrossJoinBridge : public exec::JoinBridge {
  public:
-  void setData(ArrowArray* data);
+  // TODO: to be decide which one is proper.
+  void setData(CiderCrossBuildData data);
 
-  std::optional<ArrowArray*> dataOrFuture(ContinueFuture* future);
+  std::optional<CiderCrossBuildData> hasDataOrFuture(ContinueFuture* future);
+
+  //  void setData(ArrowArray* data);
+  //  std::optional<ArrowArray*> dataOrFuture(ContinueFuture* future);
 
  private:
-  std::optional<ArrowArray*> data_;
+  // std::optional<ArrowArray*> data_;
+  std::optional<CiderCrossBuildData> data_;
 };
 
 class CiderCrossJoinBuild : public exec::Operator {
