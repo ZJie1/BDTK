@@ -80,10 +80,8 @@ class CiderPlanNodeTranslator : public exec::Operator::PlanNodeTranslator {
     if (auto ciderJoinNode = std::dynamic_pointer_cast<const CiderPlanNode>(node)) {
       return [ciderJoinNode](int32_t operatorId,
                              exec::DriverCtx* ctx) -> std::unique_ptr<exec::Operator> {
-        auto substraitPlan = ciderJoinNode->getSubstraitPlan();
-        auto planUtil = std::make_shared<cider::plan::SubstraitPlan>(*substraitPlan);
-//        auto planUtil = std::make_shared<cider::plan::SubstraitPlan>(
-//            ciderJoinNode->getSubstraitPlan());
+        auto planUtil = std::make_shared<cider::plan::SubstraitPlan>(
+            ciderJoinNode->getSubstraitPlan());
         if (FLAGS_enable_batch_processor) {
           if (planUtil->hasJoinRel()) {
             return std::make_unique<CiderHashJoinBuild>(operatorId, ctx, ciderJoinNode);

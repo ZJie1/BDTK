@@ -92,6 +92,13 @@ void DefaultBatchProcessor::feedHashBuildTable(
   // TODO: feed the hashTable into nextGen context
 }
 
+void DefaultBatchProcessor::feedCrossBuildData(const struct ArrowArray* _data,
+                                               const struct ArrowSchema* _schema) {
+  // switch state from waiting to running once cross build data is ready
+  this->state_ = BatchProcessorState::kRunning;
+  // TODO: feed cross build data into nextGen context
+}
+
 std::unique_ptr<BatchProcessor> makeBatchProcessor(
     const ::substrait::Plan& plan,
     const BatchProcessorContextPtr& context) {

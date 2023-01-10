@@ -64,6 +64,8 @@ class BatchProcessor : public std::enable_shared_from_this<BatchProcessor> {
   virtual Type getProcessorType() const = 0;
 
   virtual void feedHashBuildTable(const std::shared_ptr<JoinHashTable>& hasTable) = 0;
+
+  virtual void feedCrossBuildData(const struct ArrowArray* _data, const struct ArrowSchema* _schema ) = 0;
 };
 
 using BatchProcessorPtr = std::shared_ptr<BatchProcessor>;

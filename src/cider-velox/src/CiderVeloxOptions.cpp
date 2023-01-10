@@ -21,4 +21,4 @@
 
 #include "CiderVeloxOptions.h"
 
-DEFINE_bool(enable_batch_processor, false, "Enable Cider Velox to use BatchProcessor");
+DEFINE_bool(enable_batch_processor, true, "Enable Cider Velox to use BatchProcessor");

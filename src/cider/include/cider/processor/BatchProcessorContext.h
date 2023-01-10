@@ -26,8 +26,11 @@
 #include <memory>
 #include <optional>
 #include <vector>
-#include "../../../../../thirdparty/velox/velox/vector/arrow/Abi.h"
+//#include "../../../../../thirdparty/velox/velox/vector/arrow/Abi.h"
 #include "cider/CiderAllocator.h"
+#include "exec/module/batch/ArrowABI.h"
+// #include "velox/vector/arrow/Bridge.h"
+//#include "velox/velox/vector/arrow/Abi.h"
 
 namespace cider::exec::processor {
 

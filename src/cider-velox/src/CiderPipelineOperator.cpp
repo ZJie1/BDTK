@@ -25,7 +25,7 @@
 #include "CiderHashJoinBuild.h"
 #include "exec/plan/substrait/SubstraitPlan.h"
 #include "velox/exec/Task.h"
-#include "velox/vector/arrow/Abi.h"
+//#include "velox/vector/arrow/Abi.h"
 #include "velox/vector/arrow/Bridge.h"
 
 namespace facebook::velox::plugin {
