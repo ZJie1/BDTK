@@ -23,7 +23,6 @@
 
 #include "CiderPlanNode.h"
 #include "cider/processor/BatchProcessorContext.h"
-#include "cider/processor/JoinHashTableBuilder.h"
 #include "velox/exec/JoinBridge.h"
 #include "velox/exec/Operator.h"
 
@@ -65,16 +64,21 @@ class CiderCrossJoinBuild : public exec::Operator {
   bool isFinished() override;
 
   void close() override {
-    data_.clear();
+    data_.schema->release(data_.schema);
+    data_.data->release(data_.data);
     Operator::close();
   }
 
  private:
-  std::vector<VectorPtr> data_;
+  CiderCrossBuildData data_;
 
   // Future for synchronizing with other Drivers of the same pipeline. All build
   // Drivers must be completed before making data available for the probe side.
   ContinueFuture future_{ContinueFuture::makeEmpty()};
+
+  std::shared_ptr<CiderCrossJoinBridge> joinBridge_;
+
+  const std::shared_ptr<CiderAllocator> allocator_;
 };
 
 }  // namespace facebook::velox::plugin
