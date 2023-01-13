@@ -33,6 +33,7 @@ namespace facebook::velox::plugin {
 class CiderCrossJoinBridge : public exec::JoinBridge {
  public:
   // TODO: to be decide which one is proper.
+  // TODO: set the data type into Batch /workspace/BDTK/src/cider/exec/nextgen/context/Batch.h
   void setData(CiderCrossBuildData data);
 
   std::optional<CiderCrossBuildData> hasDataOrFuture(ContinueFuture* future);
