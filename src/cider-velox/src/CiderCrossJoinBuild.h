@@ -26,7 +26,8 @@
 #include "velox/exec/JoinBridge.h"
 #include "velox/exec/Operator.h"
 
-using CiderCrossBuildData = cider::exec::processor::CrossJoinBuildData;
+using namespace cider::exec::nextgen::context;
+//using CiderCrossBuildData = cider::exec::processor::CrossJoinBuildData;
 
 namespace facebook::velox::plugin {
 
@@ -34,16 +35,16 @@ class CiderCrossJoinBridge : public exec::JoinBridge {
  public:
   // TODO: to be decide which one is proper.
   // TODO: set the data type into Batch /workspace/BDTK/src/cider/exec/nextgen/context/Batch.h
-  void setData(CiderCrossBuildData data);
+  void setData(Batch data);
 
-  std::optional<CiderCrossBuildData> hasDataOrFuture(ContinueFuture* future);
+  std::optional<Batch> hasDataOrFuture(ContinueFuture* future);
 
   //  void setData(ArrowArray* data);
   //  std::optional<ArrowArray*> dataOrFuture(ContinueFuture* future);
 
  private:
   // std::optional<ArrowArray*> data_;
-  std::optional<CiderCrossBuildData> data_;
+  std::optional<Batch> data_;
 };
 
 class CiderCrossJoinBuild : public exec::Operator {
@@ -65,13 +66,12 @@ class CiderCrossJoinBuild : public exec::Operator {
   bool isFinished() override;
 
   void close() override {
-    data_.schema->release(data_.schema);
-    data_.data->release(data_.data);
+    data_.release();
     Operator::close();
   }
 
  private:
-  CiderCrossBuildData data_;
+  Batch data_;
 
   // Future for synchronizing with other Drivers of the same pipeline. All build
   // Drivers must be completed before making data available for the probe side.

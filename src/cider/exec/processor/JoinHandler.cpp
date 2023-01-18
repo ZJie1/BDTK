@@ -49,8 +49,7 @@ void CrossProbeHandler::onState(cider::exec::processor::BatchProcessorState stat
     if (crossColumnBatchSupplier) {
       auto crossBuildData = crossColumnBatchSupplier();
       if (crossBuildData.has_value()) {
-        batchProcessor_->feedCrossBuildData(crossBuildData.value().data,
-                                            crossBuildData.value().schema);
+        batchProcessor_->feedCrossBuildData(crossBuildData.value());
       }
     }
   }

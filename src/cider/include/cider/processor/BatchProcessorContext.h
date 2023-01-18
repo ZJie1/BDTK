@@ -18,6 +18,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+#pragma once
 
 #ifndef CIDER_BATCH_PROCESSOR_CONTEXT_H
 #define CIDER_BATCH_PROCESSOR_CONTEXT_H
@@ -26,12 +27,15 @@
 #include <memory>
 #include <optional>
 #include <vector>
-//#include "../../../../../thirdparty/velox/velox/vector/arrow/Abi.h"
 #include "cider/CiderAllocator.h"
-#include "exec/module/batch/ArrowABI.h"
-// #include "velox/vector/arrow/Bridge.h"
-//#include "velox/velox/vector/arrow/Abi.h"
 
+#ifndef CIDER_BATCH_PROCESSOR_CONTEXT_H
+#define CIDER_BATCH_PROCESSOR_CONTEXT_H
+#include "velox/vector/arrow/Abi.h"
+#endif
+#include "exec/nextgen/context/Batch.h"
+
+using namespace cider::exec::nextgen::context;
 namespace cider::exec::processor {
 
 class JoinHashTable {
@@ -47,16 +51,17 @@ struct HashBuildResult {
   std::shared_ptr<JoinHashTable> table;
 };
 
-struct CrossJoinBuildData {
-  explicit CrossJoinBuildData(ArrowArray* _data, ArrowSchema* _schema)
-      : data(std::move(_data)), schema(std::move(_schema)) {}
-
-  ArrowArray* data;
-  ArrowSchema* schema;
-};
+// struct CrossJoinBuildData {
+//   explicit CrossJoinBuildData(ArrowArray* _data, ArrowSchema* _schema)
+//       : data(std::move(_data)), schema(std::move(_schema)) {}
+//
+//   ArrowArray* data;
+//   ArrowSchema* schema;
+// };
 
 using HashBuildTableSupplier = std::function<std::optional<HashBuildResult>()>;
-using CrossJoinColumnBatchSupplier = std::function<std::optional<CrossJoinBuildData>()>;
+using CrossJoinColumnBatchSupplier =
+    std::function<std::optional<cider::exec::nextgen::context::Batch>()>;
 
 class BatchProcessorContext {
  public:

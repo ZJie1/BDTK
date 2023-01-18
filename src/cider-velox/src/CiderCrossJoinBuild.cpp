@@ -22,25 +22,29 @@
 #include "CiderCrossJoinBuild.h"
 #include "Allocator.h"
 #include "velox/exec/Task.h"
-// #include "velox/vector/arrow/Abi.h"
+
+#ifndef CIDER_BATCH_PROCESSOR_CONTEXT_H
+#define CIDER_BATCH_PROCESSOR_CONTEXT_H
+#include "velox/vector/arrow/Abi.h"
+#endif
+
 #include "velox/vector/arrow/Bridge.h"
 
 namespace facebook::velox::plugin {
 
-void CiderCrossJoinBridge::setData(CiderCrossBuildData data) {
+void CiderCrossJoinBridge::setData(Batch data) {
   std::vector<ContinuePromise> promises;
   {
     std::lock_guard<std::mutex> l(mutex_);
     VELOX_CHECK(!data_.has_value(), "setData may be called only once");
-    this->data_ = CiderCrossBuildData(std::move(data));
+    this->data_ = std::move(data);
 
     promises = std::move(promises_);
   }
   notify(std::move(promises));
 }
 
-std::optional<CiderCrossBuildData> CiderCrossJoinBridge::hasDataOrFuture(
-    ContinueFuture* future) {
+std::optional<Batch> CiderCrossJoinBridge::hasDataOrFuture(ContinueFuture* future) {
   std::lock_guard<std::mutex> l(mutex_);
   VELOX_CHECK(!cancelled_, "Getting data after the build side is aborted");
   if (data_.has_value()) {
@@ -75,12 +79,13 @@ void CiderCrossJoinBuild::addInput(RowVectorPtr input) {
   ArrowSchema* inputArrowSchema = CiderBatchUtils::allocateArrowSchema();
   exportToArrow(input_, *inputArrowSchema);
 
-  auto inBatch =
-      CiderBatchUtils::createCiderBatch(allocator_, inputArrowSchema, inputArrowArray);
-  // joinHashTableBuilder_->appendBatch(std::move(inBatch));
+  cider::exec::nextgen::context::Batch inBatch(*inputArrowSchema, *inputArrowArray);
+  //  auto inBatch =
+  //      CiderBatchUtils::createCiderBatch(allocator_, inputArrowSchema,
+  //      inputArrowArray);
+  //  // joinHashTableBuilder_->appendBatch(std::move(inBatch));
 
-  data_.data = inputArrowArray;
-  data_.schema = inputArrowSchema;
+  data_ = std::move(inBatch);
 }
 
 void CiderCrossJoinBuild::noMoreInput() {
@@ -101,9 +106,9 @@ void CiderCrossJoinBuild::noMoreInput() {
     auto op = peer->findOperator(planNodeId());
     auto* build = dynamic_cast<CiderCrossJoinBuild*>(op);
     VELOX_CHECK(build);
-    //TODO: append the data from peers into the current data.
-    //data_.data;
-        //data_.insert(data_.begin(), build->data_.begin(), build->data_.end());
+    // TODO: append the data from peers into the current data.
+    // data_.data;
+    // data_.insert(data_.begin(), build->data_.begin(), build->data_.end());
   }
 
   // Realize the promises so that the other Drivers (which were not
