@@ -59,7 +59,8 @@ CiderCrossJoinBuild::CiderCrossJoinBuild(int32_t operatorId,
                                          exec::DriverCtx* driverCtx,
                                          std::shared_ptr<const CiderPlanNode> joinNode)
     : Operator(driverCtx, nullptr, operatorId, joinNode->id(), "CiderCrossJoinBuild")
-    , allocator_(std::make_shared<PoolAllocator>(operatorCtx_->pool())) {
+    , allocator_(std::make_shared<PoolAllocator>(operatorCtx_->pool()))
+    , data_(arrowSchema_, arrowArray_) {
   //  const auto& joinRel =
   //  joinNode->getSubstraitPlan().relations(0).root().input().join(); auto context =
   //  std::make_shared<CiderJoinHashTableBuildContext>(allocator_); joinHashTableBuilder_

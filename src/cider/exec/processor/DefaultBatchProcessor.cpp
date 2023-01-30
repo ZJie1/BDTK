@@ -92,8 +92,7 @@ void DefaultBatchProcessor::feedHashBuildTable(
   // TODO: feed the hashTable into nextGen context
 }
 
-void DefaultBatchProcessor::feedCrossBuildData(const struct ArrowArray* _data,
-                                               const struct ArrowSchema* _schema) {
+void DefaultBatchProcessor::feedCrossBuildData(Batch crossData) {
   // switch state from waiting to running once cross build data is ready
   this->state_ = BatchProcessorState::kRunning;
   // TODO: feed cross build data into nextGen context

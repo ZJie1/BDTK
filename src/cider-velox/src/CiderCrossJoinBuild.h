@@ -27,14 +27,15 @@
 #include "velox/exec/Operator.h"
 
 using namespace cider::exec::nextgen::context;
-//using CiderCrossBuildData = cider::exec::processor::CrossJoinBuildData;
+// using CiderCrossBuildData = cider::exec::processor::CrossJoinBuildData;
 
 namespace facebook::velox::plugin {
 
 class CiderCrossJoinBridge : public exec::JoinBridge {
  public:
   // TODO: to be decide which one is proper.
-  // TODO: set the data type into Batch /workspace/BDTK/src/cider/exec/nextgen/context/Batch.h
+  // TODO: set the data type into Batch
+  // /workspace/BDTK/src/cider/exec/nextgen/context/Batch.h
   void setData(Batch data);
 
   std::optional<Batch> hasDataOrFuture(ContinueFuture* future);
@@ -80,6 +81,8 @@ class CiderCrossJoinBuild : public exec::Operator {
   std::shared_ptr<CiderCrossJoinBridge> joinBridge_;
 
   const std::shared_ptr<CiderAllocator> allocator_;
+  ArrowArray arrowArray_;
+  ArrowSchema arrowSchema_;
 };
 
 }  // namespace facebook::velox::plugin
